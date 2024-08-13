@@ -4,12 +4,10 @@ import Project from "../models/Project";
 export class ProjectController {
 
     static createProject = async (req: Request, res: Response) => {
-
         const project = new Project(req.body)
-
         try {
             await project.save();
-            res.send('Se creo un nuevo proyecto.')
+            res.send('New project has been created.')
         } catch (error) {
             console.log(error);
         }  
@@ -26,10 +24,8 @@ export class ProjectController {
 
     static getProjectById = async (req: Request, res: Response) => {
         const {id} = req.params
-    
         try {
-            const project = await Project.findById(id)
-
+            const project = await Project.findById(id).populate('tasks')
             if(!project){
                 const error = new Error('Not found project')
                 return res.status(404).json({error: error.message})
@@ -41,16 +37,11 @@ export class ProjectController {
     }
 
     static updateProject = async (req: Request, res: Response) => {
-        const {id} = req.params
-    
         try {
-            const project = await Project.findByIdAndUpdate(id, req.body)
-
-            if(!project){
-                const error = new Error('Not found project')
-                return res.status(404).json({error: error.message})
-            }
-            await project.save()
+            req.project.clientName  = req.body.clientName
+            req.project.projectName = req.body.projectName
+            req.project.description = req.body.description
+            await req.project.save()
             res.send('Project updated successfully')
         } catch (error) {
             console.log(error);
@@ -58,16 +49,8 @@ export class ProjectController {
     }
 
     static deleteProject = async (req: Request, res: Response) => {
-        const {id} = req.params
-    
         try {
-            const project = await Project.findById(id)
-
-            if(!project){
-                const error = new Error('Not found project')
-                return res.status(404).json({error: error.message})
-            }
-            await project.deleteOne()
+            await req.project.deleteOne()
             res.send('Project deleted successfully')
         } catch (error) {
             console.log(error);
